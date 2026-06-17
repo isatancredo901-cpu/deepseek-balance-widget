@@ -26,8 +26,16 @@ jobs:
 
       - name: Build debug APK
         run: |
-          cd android-widget
-          gradle wrapper --gradle-version 9.5.1
+          # 用临时项目生成 Gradle 8.7 wrapper（避免系统 Gradle 9.x 冲突）
+          mkdir -p /tmp/wrap
+          echo 'rootProject.name = "wrap"' > /tmp/wrap/settings.gradle.kts
+          cd /tmp/wrap
+          gradle wrapper --gradle-version 8.7
+          cp gradlew "$GITHUB_WORKSPACE/android-widget/"
+          cp gradle/wrapper/gradle-wrapper.jar "$GITHUB_WORKSPACE/android-widget/gradle/wrapper/"
+          chmod +x "$GITHUB_WORKSPACE/android-widget/gradlew"
+          # 用 Gradle 8.7 构建
+          cd "$GITHUB_WORKSPACE/android-widget"
           ./gradlew assembleDebug
 
       - name: Build release APK
