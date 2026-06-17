@@ -699,8 +699,8 @@
             const apiKey = localStorage.getItem(STORAGE_KEY);
             if (apiKey) {
                 document.getElementById('apiKeyInput').value = apiKey;
-                showWidget();
             }
+            showWidget(); // 先显示 widget 容器，否则设置面板不可见
             document.getElementById('settingsPanel').classList.add('open');
         }
 
