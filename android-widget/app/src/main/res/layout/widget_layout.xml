@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/widget_bg"
+    android:padding="12dp"
+    android:elevation="4dp">
+
+    <!-- 标题行 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🐋 DeepSeek"
+            android:textColor="#E2E8F0"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:singleLine="true" />
+
+        <!-- 状态圆点 -->
+        <View
+            android:id="@+id/status_dot"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:background="@drawable/dot_yellow"
+            android:layout_marginEnd="4dp" />
+
+        <!-- 刷新按钮 -->
+        <TextView
+            android:id="@+id/refresh_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔄"
+            android:textSize="14sp"
+            android:padding="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless" />
+
+    </LinearLayout>
+
+    <!-- 余额大字 -->
+    <TextView
+        android:id="@+id/balance_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⋯"
+        android:textColor="#F8FAFC"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:singleLine="true"
+        android:layout_marginBottom="4dp"
+        android:fontFamily="sans-serif-medium" />
+
+    <!-- 状态文字 -->
+    <TextView
+        android:id="@+id/status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="查询中..."
+        android:textColor="#94A3B8"
+        android:textSize="10sp"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+</LinearLayout>

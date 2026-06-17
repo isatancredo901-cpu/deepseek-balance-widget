@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center_horizontal"
+    android:background="#0F172A">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🐋"
+        android:textSize="64sp"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DeepSeek 余额 Widget"
+        android:textColor="#F8FAFC"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="输入你的 DeepSeek API Key"
+        android:textColor="#94A3B8"
+        android:textSize="13sp"
+        android:layout_marginBottom="24dp" />
+
+    <EditText
+        android:id="@+id/api_key_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        android:textColor="#F8FAFC"
+        android:textColorHint="#475569"
+        android:background="@drawable/edit_bg"
+        android:padding="14dp"
+        android:inputType="textPassword"
+        android:singleLine="true"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/save_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="💾 保存并刷新 Widget"
+        android:textColor="#0F172A"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:padding="14dp"
+        android:background="@drawable/btn_bg"
+        android:stateListAnimator="@null" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔒 API Key 仅存储在手机本地\n不会上传到任何服务器"
+        android:textColor="#475569"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:layout_marginTop="16dp"
+        android:lineSpacingExtra="4dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="设置完成后，回到桌面\n长按添加 Widget 即可看到余额"
+        android:textColor="#64748B"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:lineSpacingExtra="4dp" />
+
+</LinearLayout>
