@@ -1,0 +1,24 @@
+{
+  "name": "DeepSeek 余额",
+  "short_name": "DS余额",
+  "description": "监控 DeepSeek API 余额的桌面小控件",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%231e293b'/><text y='.76em' font-size='120' text-anchor='middle' fill='white'>🐋</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%231e293b'/><text y='.76em' font-size='320' text-anchor='middle' fill='white'>🐋</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0f172a">
+    <title>DeepSeek 余额</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐋</text></svg>">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #38bdf8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --text: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --divider: #334155;
+            --border: #1e293b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .widget {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow:
+                0 4px 6px -1px rgba(0, 0, 0, 0.3),
+                0 2px 4px -2px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 顶部渐变装饰 */
+        .widget::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #38bdf8);
+            border-radius: 24px 24px 0 0;
+        }
+
+        /* 头部 */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-top: 4px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .header-info {
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 1px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .status-dot.available {
+            background: var(--green);
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+        }
+        .status-dot.unavailable {
+            background: var(--red);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        }
+        .status-dot.loading {
+            background: #fbbf24;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* 余额主显示 */
+        .balance-section {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 16px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+        }
+
+        .balance-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .balance-amount {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            color: var(--text);
+            line-height: 1;
+            transition: all 0.3s ease;
+        }
+
+        .balance-currency {
+            font-size: 22px;
+            font-weight: 500;
+            opacity: 0.6;
+        }
+
+        /* 详情网格 */
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .detail-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .detail-card .detail-icon {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .detail-card .detail-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+
+        .detail-card .detail-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* 底部状态栏 */
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--divider);
+        }
+
+        .update-info {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .refresh-btn:active {
+            background: rgba(56, 189, 248, 0.2);
+            transform: scale(0.96);
+        }
+
+        .refresh-btn.refreshing {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .refresh-icon {
+            display: inline-block;
+            transition: transform 0.6s ease;
+        }
+        .refreshing .refresh-icon {
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 设置面板 */
+        .settings-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .settings-toggle:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-panel {
+            display: none;
+            margin-top: 12px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 14px;
+            animation: slideDown 0.2s ease;
+        }
+        .settings-panel.open {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .settings-panel label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .settings-panel input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--divider);
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .settings-panel input:focus {
+            border-color: var(--accent);
+        }
+        .settings-panel input::placeholder {
+            color: #475569;
+        }
+
+        .save-btn {
+            background: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .save-btn:active {
+            opacity: 0.8;
+        }
+
+        /* 错误状态 */
+        .error-banner {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: var(--red);
+            text-align: center;
+        }
+        .error-banner.show {
+            display: block;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #334155;
+            color: var(--text);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 1000;
+            pointer-events: none;
+            animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        @keyframes toastOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        /* Loading skeleton */
+        .skeleton {
+            animation: shimmer 1.5s infinite;
+            background: linear-gradient(90deg,
+                rgba(255,255,255,0.03) 25%,
+                rgba(255,255,255,0.08) 50%,
+                rgba(255,255,255,0.03) 75%
+            );
+            background-size: 200% 100%;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* 无 API Key 状态 */
+        .no-key-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .no-key-state .emoji {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+        .no-key-state h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        .no-key-state p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        .no-key-state .setup-btn {
+            display: inline-block;
+            margin-top: 20px;
+            background: var(--accent);
+            color: #0f172a;
+            padding: 14px 32px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .no-key-state .setup-btn:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="widget" id="widget">
+        <!-- 无 Key 状态 -->
+        <div id="noKeyState" class="no-key-state">
+            <div class="emoji">🐋</div>
+            <h2>DeepSeek 余额监控</h2>
+            <p>输入你的 API Key 即可<br>在桌面查看余额</p>
+            <button class="setup-btn" onclick="openSettings()">⚙️ 设置 API Key</button>
+        </div>
+
+        <!-- 正常 Widget -->
+        <div id="widgetContent" style="display:none;">
+            <!-- 错误横幅 -->
+            <div class="error-banner" id="errorBanner"></div>
+
+            <!-- 头部 -->
+            <div class="header">
+                <div class="logo">🐋</div>
+                <div class="header-info">
+                    <div class="header-title">DeepSeek</div>
+                    <div class="header-subtitle">API 余额</div>
+                </div>
+                <div class="status-dot loading" id="statusDot"></div>
+                <button class="settings-toggle" onclick="toggleSettings()" title="设置">⚙️</button>
+            </div>
+
+            <!-- 余额 -->
+            <div class="balance-section">
+                <div class="balance-label">当前余额</div>
+                <div class="balance-amount" id="balanceAmount">
+                    <span class="balance-currency">¥</span>--.--
+                </div>
+            </div>
+
+            <!-- 明细 -->
+            <div class="details">
+                <div class="detail-card">
+                    <div class="detail-icon">💳</div>
+                    <div class="detail-value" id="toppedUp">---</div>
+                    <div class="detail-label">充值余额</div>
+                </div>
+                <div class="detail-card">
+                    <div class="detail-icon">🎁</div>
+                    <div class="detail-value" id="granted">---</div>
+                    <div class="detail-label">赠送余额</div>
+                </div>
+            </div>
+
+            <!-- 底部 -->
+            <div class="footer">
+                <div class="update-info">
+                    <span id="cacheBadge"></span>
+                    <span id="updateTime">---</span>
+                </div>
+                <button class="refresh-btn" id="refreshBtn" onclick="refresh()">
+                    <span class="refresh-icon">🔄</span> 刷新
+                </button>
+            </div>
+
+            <!-- 设置面板 -->
+            <div class="settings-panel" id="settingsPanel">
+                <label>DeepSeek API Key</label>
+                <div class="input-group">
+                    <input type="password" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxxxxxx">
+                    <button class="save-btn" onclick="saveApiKey()">保存</button>
+                </div>
+                <div style="font-size:10px;color:var(--text-secondary);opacity:0.7;">
+                    密钥仅存储在本地浏览器中，不会上传
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://api.deepseek.com/user/balance';
+        const STORAGE_KEY = 'deepseek_api_key';
+        const CACHE_KEY = 'deepseek_balance_cache';
+        const REFRESH_INTERVAL = 30 * 60 * 1000; // 30分钟自动刷新
+
+        let currentData = null;
+        let isCached = false;
+
+        // ======== 初始化 ========
+        async function init() {
+            const apiKey = localStorage.getItem(STORAGE_KEY);
+            if (!apiKey) {
+                showNoKeyState();
+                return;
+            }
+            document.getElementById('apiKeyInput').value = apiKey;
+            showWidget();
+            await loadData();
+        }
+
+        function showNoKeyState() {
+            document.getElementById('noKeyState').style.display = 'block';
+            document.getElementById('widgetContent').style.display = 'none';
+        }
+
+        function showWidget() {
+            document.getElementById('noKeyState').style.display = 'none';
+            document.getElementById('widgetContent').style.display = 'block';
+        }
+
+        // ======== 数据加载 ========
+        async function loadData() {
+            const apiKey = localStorage.getItem(STORAGE_KEY);
+            if (!apiKey) return;
+
+            setLoading(true);
+            hideError();
+
+            try {
+                const resp = await fetch(API_URL, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+
+                if (!resp.ok) {
+                    if (resp.status === 401 || resp.status === 403) {
+                        throw new Error('API Key 无效或已过期，请重新设置');
+                    }
+                    throw new Error(`请求失败 (${resp.status})`);
+                }
+
+                const data = await resp.json();
+                currentData = data;
+                isCached = false;
+
+                // 缓存到 localStorage
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    data: data,
+                    timestamp: Date.now()
+                }));
+
+                renderData(data, Date.now(), false);
+
+            } catch (err) {
+                console.error('API 请求失败:', err);
+                // 尝试读取缓存
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    try {
+                        const { data, timestamp } = JSON.parse(cached);
+                        if (data && data.balance_infos) {
+                            currentData = data;
+                            isCached = true;
+                            renderData(data, timestamp, true);
+                            showToast('📦 使用缓存数据');
+                            setLoading(false);
+                            return;
+                        }
+                    } catch (e) {}
+                }
+                showError(err.message);
+                setLoading(false);
+            }
+        }
+
+        function renderData(data, timestamp, cached = false) {
+            const isAvailable = data.is_available;
+            const bi = data.balance_infos && data.balance_infos[0];
+            if (!bi) {
+                showError('返回数据格式异常');
+                setLoading(false);
+                return;
+            }
+
+            const currency = bi.currency || 'CNY';
+            const symbol = currency === 'CNY' ? '¥' : '$';
+            const total = parseFloat(bi.total_balance || 0);
+            const toppedUp = parseFloat(bi.topped_up_balance || 0);
+            const granted = parseFloat(bi.granted_balance || 0);
+
+            // 更新 UI
+            document.getElementById('balanceAmount').innerHTML =
+                `<span class="balance-currency">${symbol}</span>${total.toFixed(2)}`;
+
+            document.getElementById('toppedUp').textContent = `${symbol}${toppedUp.toFixed(2)}`;
+            document.getElementById('granted').textContent = `${symbol}${granted.toFixed(2)}`;
+
+            // 状态点
+            const dot = document.getElementById('statusDot');
+            dot.className = 'status-dot ' + (isAvailable ? 'available' : 'unavailable');
+
+            // 更新时间
+            const timeStr = formatTime(timestamp);
+            const cacheBadge = document.getElementById('cacheBadge');
+            if (cached) {
+                cacheBadge.textContent = '📦';
+                document.getElementById('updateTime').textContent = ' 缓存 · ' + timeStr;
+            } else {
+                cacheBadge.textContent = '🔄';
+                document.getElementById('updateTime').textContent = ' ' + timeStr;
+            }
+
+            setLoading(false);
+        }
+
+        function showError(msg) {
+            const banner = document.getElementById('errorBanner');
+            banner.textContent = '⚠️ ' + msg;
+            banner.classList.add('show');
+            setStatusDot('error');
+
+            // 保留上次数据显示
+        }
+
+        function hideError() {
+            document.getElementById('errorBanner').classList.remove('show');
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('refreshBtn');
+            if (loading) {
+                btn.classList.add('refreshing');
+                btn.querySelector('.refresh-icon').textContent = '⏳';
+            } else {
+                btn.classList.remove('refreshing');
+                btn.querySelector('.refresh-icon').textContent = '🔄';
+            }
+
+            if (loading && !currentData) {
+                document.getElementById('statusDot').className = 'status-dot loading';
+            }
+        }
+
+        function setStatusDot(state) {
+            const dot = document.getElementById('statusDot');
+            if (state === 'error') {
+                dot.className = 'status-dot unavailable';
+            }
+        }
+
+        function formatTime(ts) {
+            const d = new Date(ts);
+            const now = new Date();
+            const diffMs = now - d;
+            const diffMin = Math.floor(diffMs / 60000);
+
+            if (diffMin < 1) return '刚刚';
+            if (diffMin < 60) return `${diffMin}分钟前`;
+
+            const h = d.getHours().toString().padStart(2, '0');
+            const m = d.getMinutes().toString().padStart(2, '0');
+            return `${h}:${m}`;
+        }
+
+        // ======== 操作 ========
+        async function refresh() {
+            await loadData();
+            if (!document.getElementById('errorBanner').classList.contains('show')) {
+                showToast('✅ 已刷新');
+            }
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById('settingsPanel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) {
+                document.getElementById('apiKeyInput').value = localStorage.getItem(STORAGE_KEY) || '';
+            }
+        }
+
+        function openSettings() {
+            const apiKey = localStorage.getItem(STORAGE_KEY);
+            if (apiKey) {
+                document.getElementById('apiKeyInput').value = apiKey;
+                showWidget();
+            }
+            document.getElementById('settingsPanel').classList.add('open');
+        }
+
+        function saveApiKey() {
+            const input = document.getElementById('apiKeyInput');
+            const key = input.value.trim();
+            if (!key) {
+                showToast('⚠️ 请输入 API Key');
+                return;
+            }
+            if (!key.startsWith('sk-')) {
+                showToast('⚠️ API Key 格式不正确，应以 sk- 开头');
+                return;
+            }
+            localStorage.setItem(STORAGE_KEY, key);
+            document.getElementById('settingsPanel').classList.remove('open');
+
+            showWidget();
+            showToast('✅ 已保存，正在查询...');
+            loadData();
+        }
+
+        function showToast(msg) {
+            // 移除旧 toast
+            const old = document.querySelector('.toast');
+            if (old) old.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 2200);
+        }
+
+        // ======== 自动刷新 ========
+        let refreshTimer;
+        function startAutoRefresh() {
+            clearInterval(refreshTimer);
+            refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
+        }
+
+        // ======== 启动 ========
+        init();
+        startAutoRefresh();
+
+        // ======== 注册 Service Worker ========
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>
