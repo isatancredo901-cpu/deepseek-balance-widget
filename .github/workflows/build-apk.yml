@@ -21,10 +21,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Generate Gradle wrapper (v8.5)
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Generate Gradle 8.5 wrapper (in temp dir)
         run: |
-          cd android-widget
+          mkdir -p /tmp/gradle-init
+          cd /tmp/gradle-init
           gradle wrapper --gradle-version 8.5
+          cp gradlew gradlew.bat "$GITHUB_WORKSPACE/android-widget/"
+          cp gradle/wrapper/gradle-wrapper.jar "$GITHUB_WORKSPACE/android-widget/gradle/wrapper/"
+          chmod +x "$GITHUB_WORKSPACE/android-widget/gradlew"
 
       - name: Build debug APK
         run: |
