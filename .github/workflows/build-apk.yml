@@ -24,12 +24,14 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Generate Gradle 8.5 wrapper (in temp dir)
+      - name: Generate Gradle 8.5 wrapper
         run: |
-          mkdir -p /tmp/gradle-init
-          cd /tmp/gradle-init
+          # Minimal project so 'gradle wrapper' works
+          mkdir -p /tmp/wrap
+          echo 'rootProject.name = "wrap"' > /tmp/wrap/settings.gradle.kts
+          cd /tmp/wrap
           gradle wrapper --gradle-version 8.5
-          cp gradlew gradlew.bat "$GITHUB_WORKSPACE/android-widget/"
+          cp gradlew "$GITHUB_WORKSPACE/android-widget/"
           cp gradle/wrapper/gradle-wrapper.jar "$GITHUB_WORKSPACE/android-widget/gradle/wrapper/"
           chmod +x "$GITHUB_WORKSPACE/android-widget/gradlew"
 
