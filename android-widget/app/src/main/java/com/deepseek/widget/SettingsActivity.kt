@@ -3,7 +3,10 @@ package com.deepseek.widget
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -34,19 +37,26 @@ class SettingsActivity : AppCompatActivity() {
             }
 
             prefs.edit().putString(DeepSeekWidget.KEY_API_KEY, key).apply()
-            Toast.makeText(this, "✅ 已保存，正在刷新 Widget...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "✅ 已保存", Toast.LENGTH_SHORT).show()
 
-            // 刷新所有 Widget
-            val appWidgetManager = AppWidgetManager.getInstance(this)
-            val componentName = ComponentName(this, DeepSeekWidget::class.java)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
-            val intent = android.content.Intent(this, DeepSeekWidget::class.java).apply {
-                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+            // 尝试刷新 Widget（如果有的话）
+            try {
+                val appWidgetManager = AppWidgetManager.getInstance(this)
+                val componentName = ComponentName(this, DeepSeekWidget::class.java)
+                val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+                if (appWidgetIds.isNotEmpty()) {
+                    val intent = Intent(this, DeepSeekWidget::class.java).apply {
+                        action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                        putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+                    }
+                    sendBroadcast(intent)
+                }
+            } catch (_: Exception) {
+                // Widget 还没添加到桌面，忽略
             }
-            sendBroadcast(intent)
 
-            finish()
+            // 延迟关闭，避免 Toast 冲突
+            Handler(Looper.getMainLooper()).postDelayed({ finish() }, 300)
         }
     }
 }

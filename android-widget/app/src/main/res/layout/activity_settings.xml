@@ -48,13 +48,12 @@
         android:id="@+id/save_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="💾 保存并刷新 Widget"
+        android:text="💾 保存并刷新"
         android:textColor="#0F172A"
         android:textSize="15sp"
         android:textStyle="bold"
         android:padding="14dp"
-        android:background="@drawable/btn_bg"
-        android:stateListAnimator="@null" />
+        android:background="@drawable/btn_bg" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -69,7 +68,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="设置完成后，回到桌面\n长按添加 Widget 即可看到余额"
+        android:text="保存后回到桌面\n长按添加小部件即可"
         android:textColor="#64748B"
         android:textSize="11sp"
         android:gravity="center"
