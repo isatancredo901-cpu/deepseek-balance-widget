@@ -18,104 +18,81 @@ class DeepSeekWidget : AppWidgetProvider() {
         const val KEY_API_KEY = "api_key"
         const val KEY_CACHE = "balance_cache"
 
-        private fun setupClickIntents(context: Context, views: RemoteViews, appWidgetId: Int) {
+        fun updateWidget(context: Context, widgetMgr: AppWidgetManager, widgetId: Int) {
+            val views = RemoteViews(context.packageName, R.layout.widget_layout)
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val apiKey = prefs.getString(KEY_API_KEY, null)
+
+            // 设置点击事件
             try {
                 // 刷新按钮
                 val refreshIntent = Intent(context, DeepSeekWidget::class.java).apply {
                     action = ACTION_REFRESH
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
                 }
-                val refreshPI = PendingIntent.getBroadcast(
-                    context, appWidgetId, refreshIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                views.setOnClickPendingIntent(R.id.refresh_btn, refreshPI)
+                views.setOnClickPendingIntent(R.id.refresh_btn,
+                    PendingIntent.getBroadcast(context, widgetId, refreshIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
 
-                // 点击 widget → 设置
+                // 点击整个 widget → 打开设置
                 val settingsIntent = Intent(context, SettingsActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
-                val settingsPI = PendingIntent.getActivity(
-                    context, appWidgetId + 10000, settingsIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                views.setOnClickPendingIntent(R.id.widget_root, settingsPI)
+                views.setOnClickPendingIntent(R.id.widget_root,
+                    PendingIntent.getActivity(context, widgetId + 10000, settingsIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             } catch (_: Exception) {}
-        }
 
-        fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
-            try {
-                val views = RemoteViews(context.packageName, R.layout.widget_layout)
-
-                // 先显示占位
+            // 先显示 Widget（占位）
+            if (apiKey.isNullOrBlank() || !apiKey.startsWith("sk-")) {
+                views.setTextViewText(R.id.balance_text, "—.—")
+                views.setTextViewText(R.id.status_text, "点击设置 API Key")
+            } else {
                 views.setTextViewText(R.id.balance_text, "⋯")
                 views.setTextViewText(R.id.status_text, "查询中...")
-                views.setTextColor(R.id.status_dot, 0xFFFBBF24.toInt())
-                setupClickIntents(context, views, appWidgetId)
-                appWidgetManager.updateAppWidget(appWidgetId, views)
+            }
+            widgetMgr.updateAppWidget(widgetId, views)
 
-                // 后台查余额
-                val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                val apiKey = prefs.getString(KEY_API_KEY, null)
-
-                if (apiKey.isNullOrBlank() || !apiKey.startsWith("sk-")) {
-                    views.setTextViewText(R.id.balance_text, "—.—")
-                    views.setTextViewText(R.id.status_text, "点击设置 API Key")
-                    views.setTextColor(R.id.status_dot, 0xFFFBBF24.toInt())
-                    appWidgetManager.updateAppWidget(appWidgetId, views)
-                    return
-                }
-
+            // 如果有 Key，后台查余额
+            if (!apiKey.isNullOrBlank() && apiKey.startsWith("sk-")) {
                 Thread {
                     try {
                         val data = fetchBalance(apiKey)
                         val available = data.optBoolean("is_available", false)
-                        val bi = data.optJSONArray("balance_infos")?.optJSONObject(0)
+                        val bi = data.optJSONArray("balance_infos")?.optJSONObject(0) ?: return@Thread
 
-                        if (bi != null) {
-                            val currency = bi.optString("currency", "CNY")
-                            val sym = if (currency == "CNY") "¥" else "$"
-                            val total = bi.optString("total_balance", "0").toDoubleOrNull() ?: 0.0
-                            val granted = bi.optString("granted_balance", "0")
-                            val topped = bi.optString("topped_up_balance", "0")
+                        val currency = bi.optString("currency", "CNY")
+                        val sym = if (currency == "CNY") "¥" else "$"
+                        val total = bi.optString("total_balance", "0").toDoubleOrNull() ?: 0.0
+                        val granted = bi.optString("granted_balance", "0")
+                        val topped = bi.optString("topped_up_balance", "0")
 
-                            views.setTextViewText(R.id.balance_text, "$sym${"%.2f".format(total)}")
-                            views.setTextViewText(R.id.status_text, "充值 ¥$topped · 赠金 ¥$granted")
-                            views.setTextColor(R.id.status_dot,
-                                if (available) 0xFF22C55E.toInt() else 0xFFEF4444.toInt()
-                            )
+                        val statusIcon = if (available) "🟢" else "🔴"
+                        views.setTextViewText(R.id.balance_text, "$sym${"%.2f".format(total)}")
+                        views.setTextViewText(R.id.status_text,
+                            "$statusIcon 充值$sym$topped · 赠金$sym$granted")
 
-                            // 缓存
-                            prefs.edit().putString(KEY_CACHE, data.toString()).apply()
-                        }
+                        prefs.edit().putString(KEY_CACHE, data.toString()).apply()
+                        widgetMgr.updateAppWidget(widgetId, views)
 
-                        appWidgetManager.updateAppWidget(appWidgetId, views)
-
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         // 尝试缓存
                         val cached = prefs.getString(KEY_CACHE, null)
                         if (cached != null) {
                             try {
-                                val cData = JSONObject(cached)
-                                val cBi = cData.optJSONArray("balance_infos")?.optJSONObject(0)
+                                val c = JSONObject(cached)
+                                val cBi = c.optJSONArray("balance_infos")?.optJSONObject(0)
                                 if (cBi != null) {
-                                    val currency = cBi.optString("currency", "CNY")
-                                    val sym = if (currency == "CNY") "¥" else "$"
+                                    val sym = if (cBi.optString("currency", "CNY") == "CNY") "¥" else "$"
                                     views.setTextViewText(R.id.balance_text, "$sym${cBi.optString("total_balance", "0")}")
-                                    views.setTextViewText(R.id.status_text, "📦 缓存 · 无法联网")
-                                    views.setTextColor(R.id.status_dot, 0xFF94A3B8.toInt())
-                                    appWidgetManager.updateAppWidget(appWidgetId, views)
+                                    views.setTextViewText(R.id.status_text, "📦 缓存")
+                                    widgetMgr.updateAppWidget(widgetId, views)
                                 }
                             } catch (_: Exception) {}
-                        } else {
-                            views.setTextViewText(R.id.status_text, "网络错误")
-                            views.setTextColor(R.id.status_dot, 0xFFEF4444.toInt())
-                            appWidgetManager.updateAppWidget(appWidgetId, views)
                         }
                     }
                 }.start()
-
-            } catch (_: Exception) {}
+            }
         }
 
         private fun fetchBalance(apiKey: String): JSONObject {
@@ -127,36 +104,29 @@ class DeepSeekWidget : AppWidgetProvider() {
                 conn.connectTimeout = 10000
                 conn.readTimeout = 10000
                 conn.connect()
-
-                val code = conn.responseCode
-                if (code != 200) {
-                    val err = conn.errorStream?.bufferedReader()?.readText() ?: ""
-                    throw Exception("HTTP $code: $err")
-                }
-                val body = conn.inputStream.bufferedReader().readText()
-                return JSONObject(body)
+                if (conn.responseCode != 200) throw Exception("HTTP ${conn.responseCode}")
+                return JSONObject(conn.inputStream.bufferedReader().readText())
             } finally {
                 conn.disconnect()
             }
         }
     }
 
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        for (id in appWidgetIds) {
-            updateWidget(context, appWidgetManager, id)
+    override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
+        for (id in ids) {
+            try { updateWidget(context, mgr, id) }
+            catch (_: Exception) {}
         }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        try {
-            super.onReceive(context, intent)
-            if (intent.action == ACTION_REFRESH) {
-                val mgr = AppWidgetManager.getInstance(context)
-                val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-                if (id != AppWidgetManager.INVALID_APPWIDGET_ID) {
-                    updateWidget(context, mgr, id)
-                }
+        try { super.onReceive(context, intent) } catch (_: Exception) {}
+        if (intent.action == ACTION_REFRESH) {
+            val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
+            if (id != -1) {
+                try { updateWidget(context, AppWidgetManager.getInstance(context), id) }
+                catch (_: Exception) {}
             }
-        } catch (_: Exception) {}
+        }
     }
 }
