@@ -23,9 +23,8 @@ class DeepSeekWidget : AppWidgetProvider() {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val apiKey = prefs.getString(KEY_API_KEY, null)
 
-            // 设置点击事件
+            // 点击事件
             try {
-                // 刷新按钮
                 val refreshIntent = Intent(context, DeepSeekWidget::class.java).apply {
                     action = ACTION_REFRESH
                     putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
@@ -34,7 +33,6 @@ class DeepSeekWidget : AppWidgetProvider() {
                     PendingIntent.getBroadcast(context, widgetId, refreshIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
 
-                // 点击整个 widget → 打开设置
                 val settingsIntent = Intent(context, SettingsActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
@@ -43,7 +41,7 @@ class DeepSeekWidget : AppWidgetProvider() {
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             } catch (_: Exception) {}
 
-            // 先显示 Widget（占位）
+            // 占位显示
             if (apiKey.isNullOrBlank() || !apiKey.startsWith("sk-")) {
                 views.setTextViewText(R.id.balance_text, "—.—")
                 views.setTextViewText(R.id.status_text, "点击设置 API Key")
@@ -53,7 +51,7 @@ class DeepSeekWidget : AppWidgetProvider() {
             }
             widgetMgr.updateAppWidget(widgetId, views)
 
-            // 如果有 Key，后台查余额
+            // 后台查余额
             if (!apiKey.isNullOrBlank() && apiKey.startsWith("sk-")) {
                 Thread {
                     try {
@@ -64,19 +62,17 @@ class DeepSeekWidget : AppWidgetProvider() {
                         val currency = bi.optString("currency", "CNY")
                         val sym = if (currency == "CNY") "¥" else "$"
                         val total = bi.optString("total_balance", "0").toDoubleOrNull() ?: 0.0
-                        val granted = bi.optString("granted_balance", "0")
-                        val topped = bi.optString("topped_up_balance", "0")
 
-                        val statusIcon = if (available) "🟢" else "🔴"
-                        views.setTextViewText(R.id.balance_text, "$sym${"%.2f".format(total)}")
+                        views.setTextViewText(R.id.balance_text,
+                            "$sym${"%.2f".format(total)}")
                         views.setTextViewText(R.id.status_text,
-                            "$statusIcon 充值$sym$topped · 赠金$sym$granted")
+                            if (available) "🟢 API 可用"
+                            else "🔴 余额不足")
 
                         prefs.edit().putString(KEY_CACHE, data.toString()).apply()
                         widgetMgr.updateAppWidget(widgetId, views)
 
                     } catch (_: Exception) {
-                        // 尝试缓存
                         val cached = prefs.getString(KEY_CACHE, null)
                         if (cached != null) {
                             try {
@@ -84,7 +80,8 @@ class DeepSeekWidget : AppWidgetProvider() {
                                 val cBi = c.optJSONArray("balance_infos")?.optJSONObject(0)
                                 if (cBi != null) {
                                     val sym = if (cBi.optString("currency", "CNY") == "CNY") "¥" else "$"
-                                    views.setTextViewText(R.id.balance_text, "$sym${cBi.optString("total_balance", "0")}")
+                                    views.setTextViewText(R.id.balance_text,
+                                        "$sym${cBi.optString("total_balance", "0")}")
                                     views.setTextViewText(R.id.status_text, "📦 缓存")
                                     widgetMgr.updateAppWidget(widgetId, views)
                                 }
@@ -114,8 +111,7 @@ class DeepSeekWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, mgr: AppWidgetManager, ids: IntArray) {
         for (id in ids) {
-            try { updateWidget(context, mgr, id) }
-            catch (_: Exception) {}
+            try { updateWidget(context, mgr, id) } catch (_: Exception) {}
         }
     }
 

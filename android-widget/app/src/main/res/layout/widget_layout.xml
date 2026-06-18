@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 极简 Widget 布局，确保 RemoteViews 兼容 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:background="#1E293B"
-    android:padding="8dp">
+    android:gravity="center_vertical"
+    android:background="@drawable/widget_glass_bg"
+    android:padding="12dp">
 
+    <!-- 头部：标题 + 刷新 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,35 +22,43 @@
             android:layout_weight="1"
             android:text="🐋 DeepSeek"
             android:textColor="#E2E8F0"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:textStyle="bold"
             android:singleLine="true" />
 
+        <!-- 大刷新按钮 -->
         <TextView
             android:id="@+id/refresh_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🔄"
-            android:textSize="12sp" />
+            android:text="  🔄  "
+            android:textSize="18sp"
+            android:padding="8dp"
+            android:background="@drawable/refresh_btn_bg" />
     </LinearLayout>
 
+    <!-- 余额大字 -->
     <TextView
         android:id="@+id/balance_text"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="⋯"
-        android:textColor="#F8FAFC"
-        android:textSize="32sp"
+        android:textColor="#FFFFFF"
+        android:textSize="36sp"
         android:textStyle="bold"
-        android:singleLine="true" />
+        android:gravity="center"
+        android:singleLine="true"
+        android:layout_marginBottom="4dp" />
 
+    <!-- 状态小字 -->
     <TextView
         android:id="@+id/status_text"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="查询中..."
+        android:text="点击设置 API Key"
         android:textColor="#94A3B8"
         android:textSize="10sp"
+        android:gravity="center"
         android:singleLine="true"
         android:maxLines="1" />
 
